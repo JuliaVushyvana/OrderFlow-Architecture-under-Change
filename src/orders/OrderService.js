@@ -2,9 +2,9 @@ import { DomainError } from "../shared/errors.js";
 import { calculateOrderTotal } from "../shared/money.js";
 
 export class OrderService {
-  constructor(orderRepository, database) {
+  constructor(orderRepository, catalog) {
     this.orderRepository = orderRepository;
-    this.database = database;
+    this.catalog = catalog;
   }
 
   createDraft({ customer, items }) {
@@ -13,7 +13,7 @@ export class OrderService {
     }
 
     const normalizedItems = items.map(({ sku, quantity }) => ({ sku, quantity }));
-    const totalCents = calculateOrderTotal(normalizedItems, this.database.products);
+    const totalCents = calculateOrderTotal(normalizedItems, this.catalog.priceList());
     return this.orderRepository.create({
       customer: { email: customer.email, name: customer.name ?? "Customer" },
       items: normalizedItems,

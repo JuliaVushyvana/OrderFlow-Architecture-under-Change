@@ -1,16 +1,16 @@
 import { DomainError, ExternalDependencyError } from "../shared/errors.js";
 
 export class PaymentService {
-  constructor(database, orderRepository, provider) {
+  constructor(database, provider) {
     this.database = database;
-    this.orderRepository = orderRepository;
     this.provider = provider;
   }
 
-  async chargeOrder(orderId, paymentToken) {
-    // Deliberate boundary leak: Payments reads an Orders repository directly.
-    const order = this.orderRepository.findById(orderId);
-    if (!order) throw new DomainError("Order not found for payment", "ORDER_NOT_FOUND", 404);
+  async chargeOrder({ orderId, amountCents, currency, paymentToken }) {
+    // Explicit contract: the caller passes what Payments needs instead of Payments reading Orders data.
+    if (!orderId || !Number.isInteger(amountCents) || amountCents < 1 || !currency) {
+      throw new DomainError("Invalid payment request", "INVALID_PAYMENT_REQUEST");
+    }
 
     const existing = [...this.database.payments.values()].find(
       (payment) => payment.orderId === orderId && payment.status === "CAPTURED"
@@ -24,8 +24,8 @@ export class PaymentService {
     const payment = {
       id: this.database.nextId("payment"),
       orderId,
-      amountCents: order.totalCents,
-      currency: order.currency,
+      amountCents,
+      currency,
       status: "PROCESSING",
       createdAt: new Date().toISOString()
     };
@@ -33,9 +33,9 @@ export class PaymentService {
 
     try {
       const providerResult = await this.provider.charge({
-        amountCents: order.totalCents,
-        currency: order.currency,
-        reference: order.id,
+        amountCents,
+        currency,
+        reference: orderId,
         paymentToken
       });
       const captured = {

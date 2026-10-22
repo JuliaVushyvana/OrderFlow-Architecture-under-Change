@@ -11,6 +11,7 @@ export class InMemoryDatabase {
     this.payments = new Map();
     this.inventoryOperations = new Map();
     this.notifications = [];
+    this.notificationOutbox = [];
     this.sequences = { order: 0, payment: 0 };
   }
 
@@ -25,7 +26,8 @@ export class InMemoryDatabase {
       orders: structuredClone([...this.orders.values()]),
       payments: structuredClone([...this.payments.values()]),
       inventoryOperations: structuredClone([...this.inventoryOperations.values()]),
-      notifications: structuredClone(this.notifications)
+      notifications: structuredClone(this.notifications),
+      notificationOutbox: structuredClone(this.notificationOutbox)
     };
   }
 }

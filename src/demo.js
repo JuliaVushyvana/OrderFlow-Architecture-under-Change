@@ -22,5 +22,6 @@ const result = await app.services.checkout.checkout({
   items: [{ sku: "KEYBOARD", quantity: 1 }, { sku: "MOUSE", quantity: 2 }],
   paymentToken: "tok_demo_4242"
 });
+const dispatch = await app.services.notifications.dispatchPending();
 
-console.log(JSON.stringify(result, null, 2));
+console.log(JSON.stringify({ ...result, dispatch }, null, 2));

@@ -54,6 +54,12 @@ export class InventoryService {
     });
   }
 
+  priceList() {
+    return new Map(
+      [...this.database.products.values()].map(({ sku, name, priceCents }) => [sku, { sku, name, priceCents }])
+    );
+  }
+
   listProducts() {
     return [...this.database.products.values()].map((product) => structuredClone(product));
   }

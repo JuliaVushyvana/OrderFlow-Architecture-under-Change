@@ -16,7 +16,9 @@ export const config = {
   notification: {
     minMs: numberFromEnv("NOTIFICATION_MIN_MS", 150),
     maxMs: numberFromEnv("NOTIFICATION_MAX_MS", 450),
-    failureRate: numberFromEnv("NOTIFICATION_FAILURE_RATE", 0.02)
+    failureRate: numberFromEnv("NOTIFICATION_FAILURE_RATE", 0.02),
+    dispatchIntervalMs: numberFromEnv("NOTIFICATION_DISPATCH_INTERVAL_MS", 1000),
+    maxAttempts: numberFromEnv("NOTIFICATION_MAX_ATTEMPTS", 5)
   }
 };
 

@@ -14,13 +14,15 @@ export function createApplication(options = {}) {
   const settings = validateConfig(options.config ?? config);
   const database = options.database ?? createDatabase();
   const orderRepository = new OrderRepository(database);
-  const orderService = new OrderService(orderRepository, database);
   const inventoryService = new InventoryService(database);
+  const orderService = new OrderService(orderRepository, inventoryService);
   const paymentProvider = options.paymentProvider ?? new FakePaymentProvider(settings.payment);
   const notificationProvider = options.notificationProvider
     ?? new FakeNotificationProvider(settings.notification);
-  const paymentService = new PaymentService(database, orderRepository, paymentProvider);
-  const notificationService = new NotificationService(database, notificationProvider);
+  const paymentService = new PaymentService(database, paymentProvider);
+  const notificationService = new NotificationService(database, notificationProvider, {
+    maxAttempts: settings.notification.maxAttempts
+  });
   const reportingService = new ReportingService(database);
   const checkoutService = new CheckoutService({
     orderService,
@@ -34,6 +36,7 @@ export function createApplication(options = {}) {
     services: {
       checkout: checkoutService,
       inventory: inventoryService,
+      notifications: notificationService,
       orders: orderService,
       payments: paymentService,
       reporting: reportingService

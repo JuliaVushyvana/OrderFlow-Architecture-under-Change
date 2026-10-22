@@ -73,7 +73,14 @@ server.listen(config.port, () => {
   console.log(`OrderFlow listening on http://localhost:${config.port}`);
 });
 
+const notificationDispatcher = setInterval(() => {
+  app.services.notifications.dispatchPending().catch((error) => {
+    console.error("Notification dispatch failed", error);
+  });
+}, config.notification.dispatchIntervalMs);
+
 function shutdown() {
+  clearInterval(notificationDispatcher);
   server.close(() => process.exit(0));
 }
 

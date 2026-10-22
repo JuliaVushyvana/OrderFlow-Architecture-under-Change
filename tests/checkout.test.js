@@ -36,15 +36,19 @@ const command = {
   paymentToken: "tok_test_4242"
 };
 
-test("checkout reserves stock, captures payment and sends confirmation", async () => {
+test("checkout reserves stock, captures payment and queues confirmation", async () => {
   const app = buildApplication();
   const result = await app.services.checkout.checkout(command);
 
   assert.equal(result.order.status, "COMPLETED");
   assert.equal(result.order.paymentStatus, "PAID");
   assert.equal(result.payment.status, "CAPTURED");
-  assert.equal(result.notification.status, "SENT");
+  assert.equal(result.notification.status, "QUEUED");
   assert.equal(app.database.products.get("KEYBOARD").stock, 11);
+
+  const dispatch = await app.services.notifications.dispatchPending();
+  assert.deepEqual(dispatch, { sent: 1, retrying: 0, failed: 0 });
+  assert.equal(app.database.notifications[0].status, "SENT");
 });
 
 test("payment failure marks order failed and releases stock", async () => {
@@ -73,6 +77,7 @@ test("duplicate inventory reservation does not reduce stock twice", () => {
 test("reporting combines operational order and payment data", async () => {
   const app = buildApplication();
   await app.services.checkout.checkout(command);
+  await app.services.notifications.dispatchPending();
 
   const report = app.services.reporting.buildSalesSummary();
 

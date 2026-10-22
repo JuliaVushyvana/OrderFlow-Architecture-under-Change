@@ -16,12 +16,17 @@ export class CheckoutService {
       inventoryReserved = true;
       order = this.orderService.markInventoryReserved(order.id);
 
-      const payment = await this.paymentService.chargeOrder(order.id, command.paymentToken);
+      const payment = await this.paymentService.chargeOrder({
+        orderId: order.id,
+        amountCents: order.totalCents,
+        currency: order.currency,
+        paymentToken: command.paymentToken
+      });
       order = this.orderService.markPaid(order.id, payment.id);
       order = this.orderService.complete(order.id);
 
-      // Deliberate critical-path dependency: checkout waits for email delivery.
-      const notification = await this.notificationService.sendOrderConfirmation(order);
+      // Confirmation email is queued, so mail latency or failure cannot fail a paid order.
+      const notification = this.notificationService.enqueueOrderConfirmation(order);
 
       return {
         order,
